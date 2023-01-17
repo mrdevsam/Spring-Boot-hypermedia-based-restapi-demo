@@ -62,8 +62,8 @@ public class EmployeeController {
     }
 
     @PutMapping("/employees/{id}")
-    Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
-        return employeeRepository.findById(id).map(employee -> {
+    ResponseEntity<?> replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+        Employee updatedEmployee = employeeRepository.findById(id).map(employee -> {
             employee.setName(newEmployee.getName());
             employee.setRole(newEmployee.getRole());
             return employeeRepository.save(employee);
@@ -71,10 +71,15 @@ public class EmployeeController {
             newEmployee.setId(id);
             return employeeRepository.save(newEmployee);
         });
+
+        EntityModel<Employee> entityModel = employeeModelAssembler.toModel(updatedEmployee);
+
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()).body(entityModel);
     }
 
     @DeleteMapping("/employees/{id}")
-    void deleteEmployee(@PathVariable Long id) {
+    ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         employeeRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
